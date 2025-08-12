@@ -13,6 +13,7 @@ mutation ExportDataJob {
                             handle
                             title
                             createdAt
+                            publishedAt
                             descriptionHtml
                             totalInventory
                             onlineStorePreviewUrl
@@ -67,6 +68,7 @@ mutation ExportDataJob {
                                         title
                                         sku
                                         price
+                                      
                                         metafields{
                                             edges{
                                                 node{
@@ -76,6 +78,7 @@ mutation ExportDataJob {
                                                     namespace
                                                     type
                                                     updatedAt
+                                                    
                                                 }
                                             }
                                         }
