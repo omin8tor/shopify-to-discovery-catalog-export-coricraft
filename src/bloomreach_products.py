@@ -6,11 +6,12 @@ from os import getenv
 
 logger = logging.getLogger(__name__)
 
+
+
 PRODUCT_MAPPINGS = [
-  ["sp.vendor", "brand", lambda x: x],
-  ["sp.descriptionHtml", "description", lambda x: x.strip()],
-  ["sp.title", "title", lambda x: x]
+   
 ]
+
 
 
 def create_products(fp, shopify_url):
@@ -22,6 +23,27 @@ def create_products(fp, shopify_url):
 
   return products
 
+def apply_mappings(attributes, mappings):
+    for mapping in mappings:
+        source_key, target_key, save_original_flag, transform_fn = mapping
+
+        if source_key not in attributes:
+            continue
+
+        original_value = attributes[source_key]
+        transformed_value = transform_fn(original_value)
+
+        # Always assign transformed value
+        attributes[target_key] = transformed_value
+
+        # Save original if flag is 1
+        if save_original_flag == 1:
+            if source_key != target_key:
+                attributes[source_key] = original_value
+            else:
+                attributes[source_key + "_key"] = original_value
+                
+                
 
 def create_product(product, shopify_url):
 
@@ -40,27 +62,17 @@ def create_product(product, shopify_url):
 
   out_pa["url"] = f"https://{shopify_url}/products/" + in_pa["sp.handle"]
 
-  if in_pa["sp.status"] == "ACTIVE" and "sp.totalInventory" in in_pa and in_pa["sp.totalInventory"] > 0:
-    out_pa["availability"] = True
-  else:
-    out_pa["availability"] = False
+  # if in_pa["sp.status"] == "ACTIVE" and "sp.totalInventory" in in_pa and in_pa["sp.totalInventory"] > 0:
+  #   out_pa["availability"] = True
+  # else:
+  #   out_pa["availability"] = False
 
   # set thumb_image from featured image (alternatively, this could be large_image)
   # https://shopify.dev/api/admin-graphql/2023-01/objects/product#field-product-featuredimage
   if "sp.featuredImage" in in_pa and in_pa["sp.featuredImage"] and "url" in in_pa["sp.featuredImage"]:
       out_pa["thumb_image"] = in_pa["sp.featuredImage"]["url"]
 
-  # process product level mappings
-  for mapping in PRODUCT_MAPPINGS:
-    source, dest, func = mapping[0], mapping[1], mapping[2]
-    # handle scenario when pa[source] is false, such as 0
-    if source in in_pa:
-      value = func(in_pa[source])
-      if type(value) == str and value == "":
-        # don't add empty string values
-        pass
-      else:
-        out_pa[dest] = value
+  apply_mappings(out_pa, PRODUCT_MAPPINGS)
 
   # iterate over each variant
   for v_id, variant in product["variants"].items():
