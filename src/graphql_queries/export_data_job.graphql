@@ -2,7 +2,7 @@ mutation ExportDataJob {
     bulkOperationRunQuery(
         query: """
             {
-                product(id: "gid://shopify/Product/8505179275454"){
+               products(first: 10, query: "title:Fletcher Headboard Piping") {
                     pageInfo{
                         hasNextPage
                     }
