@@ -21,13 +21,19 @@ shopify.ShopifyResource.activate_session(session)
 # Now you can make GraphQL calls via shopify.GraphQL()
 graphql_client = shopify.GraphQL()
 
-if not graphql_client:
-    logging.error("Failed to initialize graphql_client")
-else:
-    logging.debug("graphql_client successfully initialized")
-    
-    
 logger = logging.getLogger(__name__)
+
+
+# TODO: transform to iteratively build file instead of in memory
+def create_products(fp, pid_identifiers = None, vid_identifiers = None):
+  products = []
+  
+  # stream over file and index each object in bulk output
+  with gzip.open(fp, 'rb') as file:
+    for line in file:
+      products.append(create_product(json.loads(line), pid_identifiers, vid_identifiers))
+  
+  return products
 
 def extract_numeric_field(field):
     return lambda x: re.sub(r"[^\d.]+", "", (json.loads(x) if isinstance(x, str) else x).get(field, "").strip())
@@ -69,6 +75,8 @@ def extract_unit_field(field):
 # - Use this mapping to normalize and enrich product attributes before exporting
 
 
+ 
+# ALL Products and Varaint Level Info
 
 PRODUCT_VARIANT_MAPPINGS = [
     ["sv.sku", "skuid", 1, lambda x: x],
@@ -105,25 +113,6 @@ PRODUCT_METAFIELD_MAPPINGS = [
     ["svm.custom.product_labels_values", "labels", 1, lambda x: x.split(",") if isinstance(x, str) else x],
    
 ]
-
-
-# TODO: transform to iteratively build file instead of in memory
-def create_products(fp, pid_identifiers = None, vid_identifiers = None):
-  products = []
-  
-  # stream over file and index each object in bulk output
-  with gzip.open(fp, 'rb') as file:
-    for line in file:
-      products.append(create_product(json.loads(line), pid_identifiers, vid_identifiers))
-  
-  return products
-
-
-
-
- 
-# ALL Products and Varaint Level Info
-
 
 def get_metaobject_labels_only(gid_list, graphql_client):
     if not gid_list:
@@ -175,15 +164,10 @@ def get_metaobject_labels_only(gid_list, graphql_client):
 
 def get_metaobject_labels_with_images(gid_list, graphql_client):
     if not gid_list:
-        return "{no records}"
+        return "{}"
 
     if isinstance(gid_list, str):
-        try:
-            gid_list = json.loads(gid_list)
-            if not isinstance(gid_list, list):
-                gid_list = [gid_list]
-        except json.JSONDecodeError:
-            gid_list = [gid_list]
+        gid_list = json.loads(gid_list)
 
     query = """
     query ($ids: [ID!]!) {
@@ -207,7 +191,6 @@ def get_metaobject_labels_with_images(gid_list, graphql_client):
 
     CHUNK_SIZE = 100
     enriched_items = {}
-    enriched_items["first_block"] = "empty"
 
     for i in range(0, len(gid_list), CHUNK_SIZE):
         chunk = gid_list[i:i + CHUNK_SIZE]
@@ -216,16 +199,8 @@ def get_metaobject_labels_with_images(gid_list, graphql_client):
         try:
             result = json.loads(response)
         except json.JSONDecodeError:
-            logger.error(f"Invalid JSON for chunk {chunk}: {response}")
-            enriched_items["Invalid JSON chuck" + str(i)] = response    
             continue
 
-        if "errors" in result:
-            logger.error(f"GraphQL errors: {result['errors']}")
-            enriched_items["GraphQL errors chuck" + str(i)] = response
-            continue
-        
-        enriched_items["chuck" + str(i)] = result    
         nodes = result.get("data", {}).get("nodes", [])
         for node in nodes:
             if not node:
@@ -241,70 +216,10 @@ def get_metaobject_labels_with_images(gid_list, graphql_client):
                 if ref and ref.get("image"):
                     image_url = ref["image"].get("transformedSrc")
 
-            if label:
+            if label and image_url:
                 enriched_items[label] = image_url
 
     return json.dumps(enriched_items)
-
-
-# def get_metaobject_labels_with_images(gid_list, graphql_client):
-#     if not gid_list:
-#         return "{}"
-
-#     if isinstance(gid_list, str):
-#         gid_list = json.loads(gid_list)
-
-#     query = """
-#     query ($ids: [ID!]!) {
-#       nodes(ids: $ids) {
-#         ... on Metaobject {
-#           fields {
-#             key
-#             value
-#             reference {
-#               ... on MediaImage {
-#                 image {
-#                   transformedSrc(maxWidth: 100, maxHeight: 100)
-#                 }
-#               }
-#             }
-#           }
-#         }
-#       }
-#     }
-#     """
-
-#     CHUNK_SIZE = 100
-#     enriched_items = {}
-
-#     for i in range(0, len(gid_list), CHUNK_SIZE):
-#         chunk = gid_list[i:i + CHUNK_SIZE]
-#         response = graphql_client.execute(query, {"ids": chunk})
-
-#         try:
-#             result = json.loads(response)
-#         except json.JSONDecodeError:
-#             continue
-
-#         nodes = result.get("data", {}).get("nodes", [])
-#         for node in nodes:
-#             if not node:
-#                 continue
-
-#             label = None
-#             image_url = None
-
-#             for field in node.get("fields", []):
-#                 if field.get("key") == "label":
-#                     label = field.get("value")
-#                 ref = field.get("reference")
-#                 if ref and ref.get("image"):
-#                     image_url = ref["image"].get("transformedSrc")
-
-#             if label and image_url:
-#                 enriched_items[label] = image_url
-
-#     return json.dumps(enriched_items)
 
 
 # def get_metaobject_labels_with_images(gid_list, graphql_client):
