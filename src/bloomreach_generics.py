@@ -21,6 +21,12 @@ shopify.ShopifyResource.activate_session(session)
 # Now you can make GraphQL calls via shopify.GraphQL()
 graphql_client = shopify.GraphQL()
 
+if not graphql_client:
+    logging.error("Failed to initialize graphql_client")
+else:
+    logging.debug("graphql_client successfully initialized")
+    
+    
 logger = logging.getLogger(__name__)
 
 def extract_numeric_field(field):
@@ -94,7 +100,7 @@ PRODUCT_METAFIELD_MAPPINGS = [
     ["svm.custom.variant_colour", "color", 1, lambda x: ", ".join(i.strip() for i in (json.loads(x) if isinstance(x, str) else x))],
     ["svm.custom.variant_colour_group", "color_group", 1, lambda x: ", ".join(i.strip() for i in (json.loads(x) if isinstance(x, str) else x))],
     ["spm.custom.legs", "legs", 1, lambda x: get_metaobject_labels_with_images( x, graphql_client)],
-   # ["spm.custom.material", "material", 1, lambda x: get_metaobject_labels_with_images( x, graphql_client)],
+    ["spm.custom.material", "material", 1, lambda x: get_metaobject_labels_with_images( x, graphql_client)],
     # ["svm.custom.product_labels", "labels", 1, lambda x: get_metaobject_labels_only( x, graphql_client)],
     ["svm.custom.product_labels_values", "labels", 1, lambda x: x.split(",") if isinstance(x, str) else x],
    
@@ -169,7 +175,7 @@ def get_metaobject_labels_only(gid_list, graphql_client):
 
 def get_metaobject_labels_with_images(gid_list, graphql_client):
     if not gid_list:
-        return "{}"
+        return "{no records}"
 
     if isinstance(gid_list, str):
         try:
@@ -201,6 +207,7 @@ def get_metaobject_labels_with_images(gid_list, graphql_client):
 
     CHUNK_SIZE = 100
     enriched_items = {}
+    enriched_items["first_block"] = "empty"
 
     for i in range(0, len(gid_list), CHUNK_SIZE):
         chunk = gid_list[i:i + CHUNK_SIZE]
@@ -210,12 +217,15 @@ def get_metaobject_labels_with_images(gid_list, graphql_client):
             result = json.loads(response)
         except json.JSONDecodeError:
             logger.error(f"Invalid JSON for chunk {chunk}: {response}")
+            enriched_items["Invalid JSON chuck" + str(i)] = response    
             continue
 
         if "errors" in result:
             logger.error(f"GraphQL errors: {result['errors']}")
+            enriched_items["GraphQL errors chuck" + str(i)] = response
             continue
-
+        
+        enriched_items["chuck" + str(i)] = result    
         nodes = result.get("data", {}).get("nodes", [])
         for node in nodes:
             if not node:
