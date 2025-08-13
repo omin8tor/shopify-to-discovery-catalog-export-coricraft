@@ -39,6 +39,9 @@ jobs:
       - name: Transform to discovery generic products
         run: |
           python src/bloomreach_generics.py --input-file=./${{ env.RUNNUM }}/1_shopify_products.jsonl.gz --output-file=./${{ env.RUNNUM }}/2_bloomreach_base.jsonl.gz --pid-props="handle" --vid-props="sku"
+        env:
+          BR_SHOPIFY_URL: ${{ vars.BR_SHOPIFY_URL }}
+          BR_SHOPIFY_PAT: ${{ secrets.BR_SHOPIFY_PAT }}
       - name: Transform to discovery products
         run: |
           python src/bloomreach_products.py --input-file=./${{ env.RUNNUM }}/2_bloomreach_base.jsonl.gz --output-file=./${{ env.RUNNUM }}/3_bloomreach_products.jsonl.gz
