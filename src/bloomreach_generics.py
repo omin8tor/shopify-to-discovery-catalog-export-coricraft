@@ -94,7 +94,7 @@ PRODUCT_METAFIELD_MAPPINGS = [
     ["svm.custom.variant_colour", "color", 1, lambda x: ", ".join(i.strip() for i in (json.loads(x) if isinstance(x, str) else x))],
     ["svm.custom.variant_colour_group", "color_group", 1, lambda x: ", ".join(i.strip() for i in (json.loads(x) if isinstance(x, str) else x))],
     ["spm.custom.legs", "legs", 1, lambda x: get_metaobject_labels_with_images( x, graphql_client)],
-    ["spm.custom.material", "material", 1, lambda x: get_metaobject_labels_with_images( x, graphql_client)],
+   # ["spm.custom.material", "material", 1, lambda x: get_metaobject_labels_with_images( x, graphql_client)],
     # ["svm.custom.product_labels", "labels", 1, lambda x: get_metaobject_labels_only( x, graphql_client)],
     ["svm.custom.product_labels_values", "labels", 1, lambda x: x.split(",") if isinstance(x, str) else x],
    
