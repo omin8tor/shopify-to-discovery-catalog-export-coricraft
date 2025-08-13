@@ -23,6 +23,18 @@ graphql_client = shopify.GraphQL()
 
 logger = logging.getLogger(__name__)
 
+
+# TODO: transform to iteratively build file instead of in memory
+def create_products(fp, pid_identifiers = None, vid_identifiers = None):
+  products = []
+  
+  # stream over file and index each object in bulk output
+  with gzip.open(fp, 'rb') as file:
+    for line in file:
+      products.append(create_product(json.loads(line), pid_identifiers, vid_identifiers))
+  
+  return products
+
 def extract_numeric_field(field):
     return lambda x: re.sub(r"[^\d.]+", "", (json.loads(x) if isinstance(x, str) else x).get(field, "").strip())
 
@@ -63,6 +75,8 @@ def extract_unit_field(field):
 # - Use this mapping to normalize and enrich product attributes before exporting
 
 
+ 
+# ALL Products and Varaint Level Info
 
 PRODUCT_VARIANT_MAPPINGS = [
     ["sv.sku", "skuid", 1, lambda x: x],
@@ -99,25 +113,6 @@ PRODUCT_METAFIELD_MAPPINGS = [
     ["svm.custom.product_labels_values", "labels", 1, lambda x: x.split(",") if isinstance(x, str) else x],
    
 ]
-
-
-# TODO: transform to iteratively build file instead of in memory
-def create_products(fp, pid_identifiers = None, vid_identifiers = None):
-  products = []
-  
-  # stream over file and index each object in bulk output
-  with gzip.open(fp, 'rb') as file:
-    for line in file:
-      products.append(create_product(json.loads(line), pid_identifiers, vid_identifiers))
-  
-  return products
-
-
-
-
- 
-# ALL Products and Varaint Level Info
-
 
 def get_metaobject_labels_only(gid_list, graphql_client):
     if not gid_list:
