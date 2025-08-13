@@ -2,7 +2,7 @@ mutation ExportDataJob {
     bulkOperationRunQuery(
         query: """
             {
-                products {
+                product(id: "gid://shopify/Product/8505179275454"){
                     pageInfo{
                         hasNextPage
                     }
