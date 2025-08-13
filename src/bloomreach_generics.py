@@ -172,7 +172,12 @@ def get_metaobject_labels_with_images(gid_list, graphql_client):
         return "{}"
 
     if isinstance(gid_list, str):
-        gid_list = json.loads(gid_list)
+        try:
+            gid_list = json.loads(gid_list)
+            if not isinstance(gid_list, list):
+                gid_list = [gid_list]
+        except json.JSONDecodeError:
+            gid_list = [gid_list]
 
     query = """
     query ($ids: [ID!]!) {
@@ -204,6 +209,11 @@ def get_metaobject_labels_with_images(gid_list, graphql_client):
         try:
             result = json.loads(response)
         except json.JSONDecodeError:
+            logger.error(f"Invalid JSON for chunk {chunk}: {response}")
+            continue
+
+        if "errors" in result:
+            logger.error(f"GraphQL errors: {result['errors']}")
             continue
 
         nodes = result.get("data", {}).get("nodes", [])
@@ -221,10 +231,70 @@ def get_metaobject_labels_with_images(gid_list, graphql_client):
                 if ref and ref.get("image"):
                     image_url = ref["image"].get("transformedSrc")
 
-            if label and image_url:
+            if label:
                 enriched_items[label] = image_url
 
     return json.dumps(enriched_items)
+
+
+# def get_metaobject_labels_with_images(gid_list, graphql_client):
+#     if not gid_list:
+#         return "{}"
+
+#     if isinstance(gid_list, str):
+#         gid_list = json.loads(gid_list)
+
+#     query = """
+#     query ($ids: [ID!]!) {
+#       nodes(ids: $ids) {
+#         ... on Metaobject {
+#           fields {
+#             key
+#             value
+#             reference {
+#               ... on MediaImage {
+#                 image {
+#                   transformedSrc(maxWidth: 100, maxHeight: 100)
+#                 }
+#               }
+#             }
+#           }
+#         }
+#       }
+#     }
+#     """
+
+#     CHUNK_SIZE = 100
+#     enriched_items = {}
+
+#     for i in range(0, len(gid_list), CHUNK_SIZE):
+#         chunk = gid_list[i:i + CHUNK_SIZE]
+#         response = graphql_client.execute(query, {"ids": chunk})
+
+#         try:
+#             result = json.loads(response)
+#         except json.JSONDecodeError:
+#             continue
+
+#         nodes = result.get("data", {}).get("nodes", [])
+#         for node in nodes:
+#             if not node:
+#                 continue
+
+#             label = None
+#             image_url = None
+
+#             for field in node.get("fields", []):
+#                 if field.get("key") == "label":
+#                     label = field.get("value")
+#                 ref = field.get("reference")
+#                 if ref and ref.get("image"):
+#                     image_url = ref["image"].get("transformedSrc")
+
+#             if label and image_url:
+#                 enriched_items[label] = image_url
+
+#     return json.dumps(enriched_items)
 
 
 # def get_metaobject_labels_with_images(gid_list, graphql_client):
