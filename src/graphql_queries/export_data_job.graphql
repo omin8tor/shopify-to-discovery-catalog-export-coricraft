@@ -2,7 +2,7 @@ mutation ExportDataJob {
     bulkOperationRunQuery(
         query: """
             {
-                products(first: 10, query: "title:Fletcher Headboard Piping") {
+                products {
                     pageInfo{
                         hasNextPage
                     }
