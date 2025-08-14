@@ -109,6 +109,7 @@ def create_product(product, shopify_url):
       out_va["availability"] = True
     else:
       out_va["availability"] = True
+      out_va["sv.availableForSale"] = False
 
     # set thumb_image (swatch_image isn't a standard shopify concept as far as I can tell)
     # https://shopify.dev/api/admin-graphql/2023-01/objects/ProductVariant#field-productvariant-image
