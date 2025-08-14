@@ -62,6 +62,24 @@ def create_product(product, shopify_url):
 
   out_pa["url"] = f"https://{shopify_url}/products/" + in_pa["sp.handle"]
 
+
+    labels_list = []
+    for key in ["spvm.custom.additional_label", "spvm.custom.product_labels_values"]:
+        val = in_pa.get(key)
+        if isinstance(val, str):
+            labels_list.extend(v.strip() for v in val.split(",") if v.strip())
+        elif isinstance(val, list):
+            labels_list.extend(v for v in val if v)
+
+    if labels_list:
+        # remove duplicates while preserving order
+        seen = set()
+        labels_list = [x for x in labels_list if not (x in seen or seen.add(x))]
+        out_pa["labels_new"] = labels_list
+
+
+   
+
   # if in_pa["sp.status"] == "ACTIVE" and "sp.totalInventory" in in_pa and in_pa["sp.totalInventory"] > 0:
   #   out_pa["availability"] = True
   # else:
