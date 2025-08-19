@@ -147,8 +147,13 @@ def create_product(product, shopify_url):
             out_va["sv.availableForSale"] = False
 
         # --- IMAGE ---
-        if "sv.image" in in_va and in_va["sv.image"] and "url" in in_va["sv.image"]:
-            out_va["thumb_image"] = in_va["sv.image"]["url"]
+        if "sv.image" in in_va and in_va["sv.image"]:
+             # Check if url exists and is not empty
+            if "url" in in_va["sv.image"] and in_va["sv.image"]["url"]:
+                out_va["thumb_image"] = in_va["sv.image"]["url"]
+            else:
+                # If url is empty, either skip OR set fallback image
+                out_va["thumb_image"] = "https://cdn.shopify.com/s/files/1/0947/0545/1302/files/No_preview_available_couch_syp8ad_ba7c62c6-ebed-4a28-861e-ac28a2b863f2.png?v=1754993946"
 
         # --- VARIANT LEVEL LABELS ---
         merge_labels(out_va, "labels")
