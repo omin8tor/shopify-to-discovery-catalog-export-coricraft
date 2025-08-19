@@ -2,7 +2,7 @@ mutation ExportDataJob {
     bulkOperationRunQuery(
         query: """
             {
-                products {
+                products(query: "published_status:published") {
                     pageInfo{
                         hasNextPage
                     }
