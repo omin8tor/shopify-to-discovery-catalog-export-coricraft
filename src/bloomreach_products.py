@@ -112,6 +112,7 @@ def create_product(product, shopify_url):
 
     # set thumb_image (swatch_image isn't a standard shopify concept as far as I can tell)
     # https://shopify.dev/api/admin-graphql/2023-01/objects/ProductVariant#field-productvariant-image
+    out_va["thumb_image"] = "https://cdn.shopify.com/s/files/1/0947/0545/1302/files/No_preview_available_couch_syp8ad_ba7c62c6-ebed-4a28-861e-ac28a2b863f2.png?v=1754993946"
     if "sv.image" in in_va and in_va["sv.image"] and "url" in in_va["sv.image"]:
       out_va["thumb_image"] = in_va["sv.image"]["url"]
     
