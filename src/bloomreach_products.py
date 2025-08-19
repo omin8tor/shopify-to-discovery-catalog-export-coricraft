@@ -107,6 +107,17 @@ def create_product(product, shopify_url):
         labels_list = [x for x in labels_list if not (x in seen or seen.add(x))]
         out_pa["labels_new"] = labels_list
 
+        # set thumb_image from featured image (with fallback)
+    if (
+        "sp.featuredImage" in in_pa
+        and in_pa["sp.featuredImage"]
+        and "url" in in_pa["sp.featuredImage"]
+        and in_pa["sp.featuredImage"]["url"]
+    ):
+        out_pa["thumb_image"] = in_pa["sp.featuredImage"]["url"]
+    else:
+        out_pa["thumb_image"] = "https://cdn.shopify.com/s/files/1/0947/0545/1302/files/No_preview_available_couch_syp8ad_ba7c62c6-ebed-4a28-861e-ac28a2b863f2.png?v=1754993946"
+
     # set thumb_image from featured image
     if "sp.featuredImage" in in_pa and in_pa["sp.featuredImage"] and "url" in in_pa["sp.featuredImage"]:
         out_pa["thumb_image"] = in_pa["sp.featuredImage"]["url"]
