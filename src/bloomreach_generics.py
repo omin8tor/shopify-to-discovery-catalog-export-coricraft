@@ -116,9 +116,9 @@ PRODUCT_METAFIELD_MAPPINGS = [
 
 VARIANT_MERGING = [
     [["svm.custom.additional_label", "svm.custom.product_labels_values"], "labels"],
-    [["svm.custom.additional_label", "svm.custom.product_labels_values","svm.custom.shop_by_range" ], "labels1"],
-    [["svm.custom.additional_label", "svm.custom.product_labels_values","svm.custom.shop_by_range","svm.custom.shop_by_room" ], "labels2"],
-    [["svm.custom.additional_label", "svm.custom.product_labels_values","svm.custom.shop_by_range","svm.custom.shop_by_room","svm.custom.variant_colour" ], "labels3"],
+    # [["svm.custom.additional_label", "svm.custom.product_labels_values","svm.custom.shop_by_range" ], "labels1"],
+    # [["svm.custom.additional_label", "svm.custom.product_labels_values","svm.custom.shop_by_range","svm.custom.shop_by_room" ], "labels2"],
+    # [["svm.custom.additional_label", "svm.custom.product_labels_values","svm.custom.shop_by_range","svm.custom.shop_by_room","svm.custom.variant_colour" ], "labels3"],
 ]
 
 
