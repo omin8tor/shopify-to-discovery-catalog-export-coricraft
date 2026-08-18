@@ -9,7 +9,7 @@ import re
 shopify_url = getenv("BR_SHOPIFY_URL")
 api_token = getenv("BR_SHOPIFY_PAT")
 
-api_version = "2025-04"  # Or use current version
+api_version = "2026-10"  # Or use current version
 
 # Construct full shop URL
 full_shop_url = f"https://{shopify_url}"
