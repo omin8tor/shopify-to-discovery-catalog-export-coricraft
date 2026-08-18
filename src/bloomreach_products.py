@@ -91,7 +91,7 @@ def create_product(product, shopify_url):
     # container for the transformed product attributes and variants
     out_pa = out_product["attributes"]
 
-    out_pa["url"] = getenv("BR_SHOPIFY_CUSTOMER_FACING_URL").rstrip("/") + "/products/" + in_pa["sp.handle"]
+    out_pa["url"] = f"https://{shopify_url}/products/" + in_pa["sp.handle"]
 
     # ---- PRODUCT LEVEL LABELS (unchanged: merge both always) ----
     labels_list = []
