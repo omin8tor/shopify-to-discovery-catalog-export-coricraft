@@ -32,6 +32,7 @@ jobs:
         env:
           BR_SHOPIFY_URL: ${{ vars.BR_SHOPIFY_URL }}
           BR_SHOPIFY_PAT: ${{ secrets.BR_SHOPIFY_PAT }}
+          BR_SHOPIFY_CUSTOMER_FACING_URL: ${{ secrets.BR_SHOPIFY_CUSTOMER_FACING_URL }}
           BR_OUTPUT_DIR: "./${{ env.RUNNUM }}/"
       - name: Transform to Shopify aggregated products
         run: |
