@@ -78,6 +78,94 @@ def merge_labels(attributes, new_key="labels"):
         attributes[new_key] = [x for x in existing_labels if not (x in seen or seen.add(x))]
 
 
+# def create_product(product, shopify_url):
+#     out_product = {
+#         "id": product["id"],
+#         "attributes": product["attributes"].copy(),
+#         "variants": {}
+#     }
+
+#     # container for input product attributes
+#     in_pa = product["attributes"]
+
+#     # container for the transformed product attributes and variants
+#     out_pa = out_product["attributes"]
+
+#     customer_facing_url = getenv("BR_SHOPIFY_CUSTOMER_FACING_URL")
+
+#     out_pa["url"] = f"https://{customer_facing_url}/products/{in_pa['sp.handle']}"
+
+#     # ---- PRODUCT LEVEL LABELS (unchanged: merge both always) ----
+#     labels_list = []
+#     for key in ["spvm.custom.additional_label", "spvm.custom.product_labels_values"]:
+#         val = in_pa.get(key)
+#         if isinstance(val, str):
+#             labels_list.extend(v.strip() for v in val.split(",") if v.strip())
+#         elif isinstance(val, list):
+#             labels_list.extend(v for v in val if v)
+
+#     if labels_list:
+#         seen = set()
+#         labels_list = [x for x in labels_list if not (x in seen or seen.add(x))]
+#         out_pa["labels_new"] = labels_list
+
+
+#     # set thumb_image from featured image
+#     if "sp.featuredImage" in in_pa and in_pa["sp.featuredImage"] and "url" in in_pa["sp.featuredImage"]:
+#         out_pa["thumb_image"] = in_pa["sp.featuredImage"]["url"]
+
+#     apply_mappings(out_pa, PRODUCT_MAPPINGS)
+
+#     # ---- VARIANTS ----
+#     for v_id, variant in product["variants"].items():
+#         in_va = variant["attributes"]
+#         out_va = variant["attributes"].copy()
+#         out_product["variants"][v_id] = {}
+
+#         # --- PRICE LOGIC ---
+#         if "sv.compareAtPrice" in in_va and in_va["sv.compareAtPrice"]:
+#             if in_va["sv.compareAtPrice"] == in_va["sv.price"]:
+#                 out_va["price"] = in_va["sv.compareAtPrice"]
+#             else:
+#                 out_va["price"] = in_va["sv.compareAtPrice"]
+#                 out_va["sale_price"] = in_va["sv.price"]
+#         else:
+#             out_va["price"] = in_va["sv.price"]
+
+#         # --- OPTIONS (Color, Size) ---
+#         if "sv.selectedOptions" in in_va:
+#             if in_va["sv.selectedOptions"] and len(in_va["sv.selectedOptions"]) > 0:
+#                 for option in in_va["sv.selectedOptions"]:
+#                     if "name" in option and "value" in option and "Color" in option["name"]:
+#                         out_va["color"] = option["value"]
+#                     if "name" in option and "value" in option and "Size" in option["name"]:
+#                         out_va["size"] = option["value"]
+
+#         # --- AVAILABILITY ---
+#         out_va["availability"] = False
+#         if "sv.availableForSale" in in_va and in_va["sv.availableForSale"]:
+#             out_va["availability"] = True
+#         else:
+#             out_va["availability"] = True
+#             out_va["sv.availableForSale"] = False
+
+#         # --- IMAGE ---
+#         out_va["thumb_image"] = "https://cdn.shopify.com/s/files/1/0947/0545/1302/files/No_preview_available_couch_syp8ad_ba7c62c6-ebed-4a28-861e-ac28a2b863f2.png?v=1754993946"
+#         if "sv.image" in in_va and in_va["sv.image"]:
+#              # Check if url exists and is not empty
+#             if "url" in in_va["sv.image"] and in_va["sv.image"]["url"]:
+#                 out_va["thumb_image"] = in_va["sv.image"]["url"]
+#             else:
+#                 # If url is empty, either skip OR set fallback image
+#                 out_va["thumb_image"] = "https://cdn.shopify.com/s/files/1/0947/0545/1302/files/No_preview_available_couch_syp8ad_ba7c62c6-ebed-4a28-861e-ac28a2b863f2.png?v=1754993946"
+
+#         # --- VARIANT LEVEL LABELS ---
+#         merge_labels(out_va, "labels")
+
+#         out_product["variants"][v_id]["attributes"] = out_va
+
+#     return out_product
+
 def create_product(product, shopify_url):
     out_product = {
         "id": product["id"],
@@ -85,33 +173,58 @@ def create_product(product, shopify_url):
         "variants": {}
     }
 
-    # container for input product attributes
+    # Input product attributes
     in_pa = product["attributes"]
 
-    # container for the transformed product attributes and variants
+    # Output product attributes
     out_pa = out_product["attributes"]
 
     customer_facing_url = getenv("BR_SHOPIFY_CUSTOMER_FACING_URL")
 
-    out_pa["url"] = f"https://{customer_facing_url}/products/{in_pa['sp.handle']}"
+    out_pa["url"] = (
+        f"https://{customer_facing_url}/products/{in_pa['sp.handle']}"
+    )
 
-    # ---- PRODUCT LEVEL LABELS (unchanged: merge both always) ----
+    # ---- PRODUCT LEVEL LABELS ----
     labels_list = []
-    for key in ["spvm.custom.additional_label", "spvm.custom.product_labels_values"]:
+
+    for key in [
+        "spvm.custom.additional_label",
+        "spvm.custom.product_labels_values"
+    ]:
         val = in_pa.get(key)
+
         if isinstance(val, str):
-            labels_list.extend(v.strip() for v in val.split(",") if v.strip())
+            labels_list.extend(
+                value.strip()
+                for value in val.split(",")
+                if value.strip()
+            )
+
         elif isinstance(val, list):
-            labels_list.extend(v for v in val if v)
+            labels_list.extend(
+                value
+                for value in val
+                if value
+            )
 
     if labels_list:
         seen = set()
-        labels_list = [x for x in labels_list if not (x in seen or seen.add(x))]
+
+        labels_list = [
+            value
+            for value in labels_list
+            if not (value in seen or seen.add(value))
+        ]
+
         out_pa["labels_new"] = labels_list
 
-
-    # set thumb_image from featured image
-    if "sp.featuredImage" in in_pa and in_pa["sp.featuredImage"] and "url" in in_pa["sp.featuredImage"]:
+    # ---- PRODUCT FEATURED IMAGE ----
+    if (
+        "sp.featuredImage" in in_pa
+        and in_pa["sp.featuredImage"]
+        and "url" in in_pa["sp.featuredImage"]
+    ):
         out_pa["thumb_image"] = in_pa["sp.featuredImage"]["url"]
 
     apply_mappings(out_pa, PRODUCT_MAPPINGS)
@@ -120,9 +233,10 @@ def create_product(product, shopify_url):
     for v_id, variant in product["variants"].items():
         in_va = variant["attributes"]
         out_va = variant["attributes"].copy()
+
         out_product["variants"][v_id] = {}
 
-        # --- PRICE LOGIC ---
+        # ---- PRICE LOGIC ----
         if "sv.compareAtPrice" in in_va and in_va["sv.compareAtPrice"]:
             if in_va["sv.compareAtPrice"] == in_va["sv.price"]:
                 out_va["price"] = in_va["sv.compareAtPrice"]
@@ -132,36 +246,90 @@ def create_product(product, shopify_url):
         else:
             out_va["price"] = in_va["sv.price"]
 
-        # --- OPTIONS (Color, Size) ---
+        # ---- NEW: SELECTED OPTIONS AS JSON STRING ----
+        #
+        # Example Shopify input:
+        #
+        # [
+        #   {"name": "Colour", "value": "Como Natural"},
+        #   {"name": "Leg", "value": "Natural Wooden Leg"}
+        # ]
+        #
+        # Output:
+        #
+        # sv.selectedOptionNew =
+        # '{"Colour":"Como Natural","Leg":"Natural Wooden Leg"}'
+        #
+        selected_options = in_va.get("sv.selectedOptions")
+
+        if isinstance(selected_options, list):
+            option_map = {
+                option["name"]: option["value"]
+                for option in selected_options
+                if (
+                    isinstance(option, dict)
+                    and isinstance(option.get("name"), str)
+                    and option["name"].strip()
+                    and isinstance(option.get("value"), str)
+                )
+            }
+
+            if option_map:
+                out_va["sv.selectedOptionNew"] = json.dumps(
+                    option_map,
+                    ensure_ascii=False,
+                    separators=(",", ":")
+                )
+
+        # ---- EXISTING OPTIONS: COLOR AND SIZE ----
         if "sv.selectedOptions" in in_va:
-            if in_va["sv.selectedOptions"] and len(in_va["sv.selectedOptions"]) > 0:
+            if (
+                in_va["sv.selectedOptions"]
+                and len(in_va["sv.selectedOptions"]) > 0
+            ):
                 for option in in_va["sv.selectedOptions"]:
-                    if "name" in option and "value" in option and "Color" in option["name"]:
+                    if (
+                        "name" in option
+                        and "value" in option
+                        and "Color" in option["name"]
+                    ):
                         out_va["color"] = option["value"]
-                    if "name" in option and "value" in option and "Size" in option["name"]:
+
+                    if (
+                        "name" in option
+                        and "value" in option
+                        and "Size" in option["name"]
+                    ):
                         out_va["size"] = option["value"]
 
-        # --- AVAILABILITY ---
+        # ---- EXISTING AVAILABILITY LOGIC ----
         out_va["availability"] = False
+
         if "sv.availableForSale" in in_va and in_va["sv.availableForSale"]:
             out_va["availability"] = True
         else:
             out_va["availability"] = True
             out_va["sv.availableForSale"] = False
 
-        # --- IMAGE ---
-        out_va["thumb_image"] = "https://cdn.shopify.com/s/files/1/0947/0545/1302/files/No_preview_available_couch_syp8ad_ba7c62c6-ebed-4a28-861e-ac28a2b863f2.png?v=1754993946"
+        # ---- VARIANT IMAGE ----
+        fallback_image = (
+            "https://cdn.shopify.com/s/files/1/0947/0545/1302/files/"
+            "No_preview_available_couch_syp8ad_ba7c62c6-ebed-4a28-"
+            "861e-ac28a2b863f2.png?v=1754993946"
+        )
+
+        out_va["thumb_image"] = fallback_image
+
         if "sv.image" in in_va and in_va["sv.image"]:
-             # Check if url exists and is not empty
             if "url" in in_va["sv.image"] and in_va["sv.image"]["url"]:
                 out_va["thumb_image"] = in_va["sv.image"]["url"]
             else:
-                # If url is empty, either skip OR set fallback image
-                out_va["thumb_image"] = "https://cdn.shopify.com/s/files/1/0947/0545/1302/files/No_preview_available_couch_syp8ad_ba7c62c6-ebed-4a28-861e-ac28a2b863f2.png?v=1754993946"
+                out_va["thumb_image"] = fallback_image
 
-        # --- VARIANT LEVEL LABELS ---
+        # ---- VARIANT LEVEL LABELS ----
         merge_labels(out_va, "labels")
 
+        # Save transformed variant attributes
         out_product["variants"][v_id]["attributes"] = out_va
 
     return out_product
