@@ -310,7 +310,14 @@ def create_product(product, shopify_url):
         else:
             out_va["availability"] = True
             out_va["sv.availableForSale"] = False
-
+        # ---- INVENTORY POLICY (DENY / CONTINUE) AS ARRAY ----
+        inventory_policy = in_va.get("sv.inventoryPolicy")
+        if inventory_policy:
+            out_va["sv.inventoryPolicy"] = (
+                inventory_policy
+                if isinstance(inventory_policy, list)
+                else [inventory_policy]
+            )
         # ---- VARIANT IMAGE ----
         fallback_image = (
             "https://cdn.shopify.com/s/files/1/0947/0545/1302/files/"
